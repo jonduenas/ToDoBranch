@@ -11,10 +11,13 @@ import SwiftUI
 struct ToDoBranchApp: App {
     let persistenceController = PersistenceController.shared
 
+    @State private var listViewModel = ToDoListViewModel()
+
     var body: some Scene {
         WindowGroup {
-            ContentView()
-                .environment(\.managedObjectContext, persistenceController.container.viewContext)
+            NavigationStack {
+                ToDoListView(viewModel: listViewModel)
+            }
         }
     }
 }

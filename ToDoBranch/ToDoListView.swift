@@ -14,18 +14,12 @@ struct ToDoItem: Identifiable {
 }
 
 struct ToDoListView: View {
-    @State private var toDos: [ToDoItem] = [
-        ToDoItem(name: "", completed: false),
-        ToDoItem(name: "Buy groceries", completed: false),
-        ToDoItem(name: "Walk the dog", completed: true),
-        ToDoItem(name: "Finish homework", completed: false)
-    ]
-
+    @Bindable var viewModel: ToDoListViewModel
     @FocusState private var focusedID: UUID?
 
     var body: some View {
         List {
-            ForEach($toDos) { $todo in
+            ForEach($viewModel.toDos) { $todo in
                 Button {
                     withAnimation {
                         todo.completed.toggle()
@@ -40,27 +34,27 @@ struct ToDoListView: View {
                 }
             }
             .onDelete { indexSet in
-                toDos.remove(atOffsets: indexSet)
+                viewModel.onDelete(indexSet)
             }
         }
         .listStyle(.plain)
         .navigationTitle("To-Do List")
+        .scrollDismissesKeyboard(.immediately)
         .fontDesign(.rounded)
-        .safeAreaInset(edge: .bottom) {
-            if focusedID == nil {
+        .toolbar {
+            ToolbarItem(placement: .bottomBar) {
                 Button {
                     withAnimation {
-                        let new = ToDoItem(name: "", completed: false)
-                        toDos.append(new)
-                        focusedID = new.id
+                        focusedID = viewModel.newItemButtonTapped()
                     }
                 } label: {
                     Label("New Item", systemImage: "plus.circle.fill")
                         .bold()
                         .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding()
                         .imageScale(.large)
                 }
+                .buttonStyle(.borderless)
+                .labelStyle(.titleAndIcon)
             }
         }
     }
@@ -68,6 +62,6 @@ struct ToDoListView: View {
 
 #Preview {
     NavigationStack {
-        ToDoListView()
+        ToDoListView(viewModel: ToDoListViewModel())
     }
 }

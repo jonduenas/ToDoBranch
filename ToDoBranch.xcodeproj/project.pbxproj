@@ -27,6 +27,7 @@
 		6508C6782DCA8878006DB101 /* ToDoBranch.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ToDoBranch.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		6508C68A2DCA8879006DB101 /* ToDoBranchTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ToDoBranchTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		6508C6942DCA8879006DB101 /* ToDoBranchUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ToDoBranchUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		659D3C7F2DCF9EC70013289E /* ToDoBranch.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = ToDoBranch.xctestplan; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -75,6 +76,7 @@
 		6508C66F2DCA8878006DB101 = {
 			isa = PBXGroup;
 			children = (
+				659D3C7F2DCF9EC70013289E /* ToDoBranch.xctestplan */,
 				6508C67A2DCA8878006DB101 /* ToDoBranch */,
 				6508C68D2DCA8879006DB101 /* ToDoBranchTests */,
 				6508C6972DCA8879006DB101 /* ToDoBranchUITests */,
