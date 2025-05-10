@@ -5,19 +5,21 @@
 //  Created by Jon Duenas on 5/10/25.
 //
 
-
-import Testing
-@testable import ToDoBranch
 import Foundation
+import Testing
+
+@testable import ToDoBranch
 
 @MainActor
 struct ToDoListViewModelTests {
-
     @Test func newItemButtonTappedCreatesNewItemAndReturnsID() async throws {
         let testPersistence = PersistenceController(inMemory: true)
-        let testRepository = ToDoRepository(persistenceController: testPersistence)
+        let testRepository = ToDoRepository(mode: .live(testPersistence), demoDataService: FetchableServiceStub<DemoToDo>())
         let viewModel = ToDoListViewModel(repository: testRepository)
+
+        await viewModel.onAppearTask()
         let initialCount = viewModel.toDos.count
+
         let newItemID = viewModel.newItemButtonTapped()
 
         // Check if the new item is added to the list
@@ -29,10 +31,13 @@ struct ToDoListViewModelTests {
 
     @Test func onDeleteRemovesItemFromList() async throws {
         let testPersistence = PersistenceController(inMemory: true)
-        let testRepository = ToDoRepository(persistenceController: testPersistence)
+        let testRepository = ToDoRepository(mode: .live(testPersistence), demoDataService: FetchableServiceStub<DemoToDo>())
         try testRepository.addToDo(name: "Test Item 1")
         let viewModel = ToDoListViewModel(repository: testRepository)
+
+        await viewModel.onAppearTask()
         let initialCount = viewModel.toDos.count
+        try #require(initialCount == 1)
 
         // Delete the first item
         viewModel.onDelete(IndexSet(integer: 0))
@@ -40,5 +45,4 @@ struct ToDoListViewModelTests {
         // Check if the item was removed
         #expect(viewModel.toDos.count == initialCount - 1)
     }
-
 }

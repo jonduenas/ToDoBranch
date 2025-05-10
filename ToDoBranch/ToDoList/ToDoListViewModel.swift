@@ -14,10 +14,29 @@ final class ToDoListViewModel {
         repository.todos
     }
 
+    var isLoading: Bool = false
+
+    private var initialLoadComplete: Bool = false
     private let repository: ToDoRepository
 
     init(repository: ToDoRepository) {
         self.repository = repository
+    }
+
+    func onAppearTask() async {
+        guard !initialLoadComplete else { return }
+
+        isLoading = true
+        defer {
+            isLoading = false
+            initialLoadComplete = true
+        }
+
+        do {
+            try await repository.loadData()
+        } catch {
+            print("Error loading data: \(error)")
+        }
     }
 
     func newItemButtonTapped() -> ToDo.ID? {

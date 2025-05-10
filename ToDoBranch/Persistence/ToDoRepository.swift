@@ -11,12 +11,18 @@ import CoreData
 @MainActor
 @Observable
 final class ToDoRepository {
+    enum Mode {
+        case live(PersistenceController)
+        case demo
+    }
+
     var todos: [ToDo] = []
 
-    private let persistenceController: PersistenceController
     private let context: NSManagedObjectContext
     private let resultsController: NSFetchedResultsController<ToDo>
     private let observer: FetchedResultsObserver<ToDo>
+    private let demoDataService: any FetchableServicing<DemoToDo>
+    private let mode: Mode
 
     init(
         filter: NSPredicate? = nil,
@@ -24,9 +30,18 @@ final class ToDoRepository {
             NSSortDescriptor(keyPath: \ToDo.completed, ascending: true),
             NSSortDescriptor(keyPath: \ToDo.dateCreated, ascending: true),
         ],
-        persistenceController: PersistenceController = .shared
+        mode: Mode = .live(PersistenceController.shared),
+        demoDataService: any FetchableServicing<DemoToDo> = FetchableService<DemoToDo>()
     ) {
-        self.persistenceController = persistenceController
+        self.mode = mode
+
+        let persistenceController = switch mode {
+        case .live(let persistenceController):
+            persistenceController
+        case .demo:
+            PersistenceController(inMemory: true)
+        }
+
         self.context = persistenceController.container.viewContext
 
         let fetchRequest: NSFetchRequest<ToDo> = ToDo.fetchRequest()
@@ -41,12 +56,11 @@ final class ToDoRepository {
         )
 
         self.observer = FetchedResultsObserver(controller: resultsController)
+        self.demoDataService = demoDataService
+
         observer.didChange = { [weak self] in
             self?.didChange()
         }
-
-        try? self.resultsController.performFetch()
-        didChange()
     }
 
     @discardableResult
@@ -69,6 +83,32 @@ final class ToDoRepository {
         if context.hasChanges {
             try context.save()
         }
+    }
+
+    func loadData() async throws {
+        switch mode {
+        case .live:
+            try loadFromStore()
+        case .demo:
+            try await loadDemoData()
+        }
+    }
+
+    private func loadFromStore() throws {
+        try self.resultsController.performFetch()
+        didChange()
+    }
+
+    private func loadDemoData() async throws {
+        let demoToDos = try await demoDataService.fetch()
+        for demoToDo in demoToDos {
+            let newToDo = ToDo(context: context)
+            newToDo.name = demoToDo.title
+            newToDo.completed = demoToDo.completed
+            newToDo.dateCreated = Date()
+        }
+        try context.save()
+        try loadFromStore()
     }
 
     private func didChange() {

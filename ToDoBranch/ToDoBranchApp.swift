@@ -15,9 +15,7 @@ struct ToDoBranchApp: App {
 
     var body: some Scene {
         WindowGroup {
-            NavigationStack {
-                ToDoListView(viewModel: listViewModel)
-            }
+            ToDoContainerView(viewModel: listViewModel)
         }
     }
 }

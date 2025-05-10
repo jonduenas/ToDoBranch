@@ -7,6 +7,31 @@
 
 import SwiftUI
 
+struct ToDoContainerView: View {
+    let viewModel: ToDoListViewModel
+
+    @State private var isShowingDemo = false
+
+    var body: some View {
+        NavigationStack {
+            ToDoListView(viewModel: viewModel)
+                .navigationTitle("To-Do List")
+                .toolbar {
+                    ToolbarItem {
+                        Button("Demo") {
+                            isShowingDemo.toggle()
+                        }
+                    }
+                }
+                .fullScreenCover(isPresented: $isShowingDemo) {
+                    DemoView()
+                }
+        }
+        .fontDesign(.rounded)
+    }
+}
+
+
 struct ToDoListView: View {
     let viewModel: ToDoListViewModel
     @FocusState private var focusedID: ToDo.ID?
@@ -24,9 +49,7 @@ struct ToDoListView: View {
             }
         }
         .listStyle(.plain)
-        .navigationTitle("To-Do List")
         .scrollDismissesKeyboard(.immediately)
-        .fontDesign(.rounded)
         .animation(.default, value: viewModel.toDos)
         .toolbar {
             ToolbarItem(placement: .bottomBar) {
@@ -42,7 +65,11 @@ struct ToDoListView: View {
                 }
                 .buttonStyle(.borderless)
                 .labelStyle(.titleAndIcon)
+                .disabled(viewModel.isLoading)
             }
+        }
+        .task {
+            await viewModel.onAppearTask()
         }
     }
 }
@@ -80,15 +107,37 @@ struct ToDoListItemView: View {
     }
 }
 
+struct DemoView: View {
+    @State private var viewModel = ToDoListViewModel(
+        repository: ToDoRepository(mode: .demo)
+    )
+
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        NavigationStack {
+            ToDoListView(viewModel: viewModel)
+                .navigationTitle("Demo")
+                .toolbar {
+                    ToolbarItem(placement: .cancellationAction) {
+                        Button("Dismiss") { dismiss() }
+                    }
+                }
+                .overlay {
+                    if viewModel.isLoading {
+                        ProgressView()
+                    }
+                }
+        }
+    }
+}
 
 #Preview {
-    NavigationStack {
-        ToDoListView(
-            viewModel: ToDoListViewModel(
-                repository: ToDoRepository(
-                    persistenceController: .preview
-                )
+    ToDoContainerView(
+        viewModel: ToDoListViewModel(
+            repository: ToDoRepository(
+                mode: .live(.preview)
             )
         )
-    }
+    )
 }
