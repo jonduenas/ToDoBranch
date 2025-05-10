@@ -14,7 +14,9 @@ import Foundation
 struct ToDoListViewModelTests {
 
     @Test func newItemButtonTappedCreatesNewItemAndReturnsID() async throws {
-        let viewModel = ToDoListViewModel()
+        let testPersistence = PersistenceController(inMemory: true)
+        let testRepository = ToDoRepository(persistenceController: testPersistence)
+        let viewModel = ToDoListViewModel(repository: testRepository)
         let initialCount = viewModel.toDos.count
         let newItemID = viewModel.newItemButtonTapped()
 
@@ -26,7 +28,10 @@ struct ToDoListViewModelTests {
     }
 
     @Test func onDeleteRemovesItemFromList() async throws {
-        let viewModel = ToDoListViewModel()
+        let testPersistence = PersistenceController(inMemory: true)
+        let testRepository = ToDoRepository(persistenceController: testPersistence)
+        try testRepository.addToDo(name: "Test Item 1")
+        let viewModel = ToDoListViewModel(repository: testRepository)
         let initialCount = viewModel.toDos.count
 
         // Delete the first item
