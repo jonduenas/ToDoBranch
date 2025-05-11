@@ -17,8 +17,8 @@ struct ToDoContainerView: View {
             ToDoListView(viewModel: viewModel)
                 .navigationTitle("To-Do List")
                 .toolbar {
-                    ToolbarItem {
-                        Button("Demo") {
+                    ToolbarItem(placement: .topBarLeading) {
+                        Button("Try Demo") {
                             isShowingDemo.toggle()
                         }
                     }
@@ -37,35 +37,53 @@ struct ToDoListView: View {
     @FocusState private var focusedID: ToDo.ID?
 
     var body: some View {
-        List {
-            ForEach(viewModel.toDos) { todo in
-                ToDoListItemView(todo: todo) {
-                    viewModel.onChanged($0)
-                }
-                .focused($focusedID, equals: todo.id)
-            }
-            .onDelete { indexSet in
-                viewModel.onDelete(indexSet)
-            }
-        }
-        .listStyle(.plain)
-        .scrollDismissesKeyboard(.immediately)
-        .animation(.default, value: viewModel.toDos)
-        .toolbar {
-            ToolbarItem(placement: .bottomBar) {
-                Button {
-                    withAnimation {
-                        focusedID = viewModel.newItemButtonTapped()
+        ScrollViewReader { proxy in
+            List {
+                ForEach(viewModel.toDos) { todo in
+                    ToDoListItemView(todo: todo) {
+                        viewModel.onChanged($0)
                     }
-                } label: {
-                    Label("New Item", systemImage: "plus.circle.fill")
-                        .bold()
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .imageScale(.large)
+                    .id(todo.id)
+                    .focused($focusedID, equals: todo.id)
                 }
-                .buttonStyle(.borderless)
-                .labelStyle(.titleAndIcon)
-                .disabled(viewModel.isLoading)
+                .onDelete { indexSet in
+                    viewModel.onDelete(indexSet)
+                }
+            }
+            .listStyle(.plain)
+            .scrollDismissesKeyboard(.immediately)
+            .animation(.default, value: viewModel.toDos)
+            .toolbar {
+                ToolbarItem(placement: .primaryAction) {
+                    if focusedID != nil {
+                        Button("Done") {
+                            withAnimation { focusedID = nil }
+                        }
+                    }
+                }
+
+                ToolbarItem(placement: .bottomBar) {
+                    Button {
+                        withAnimation {
+                            // New ToDo is added at the bottom of the uncompleted items, but above the completed ones
+                            if let lastUncompletedID = viewModel.toDos.last(where: { !$0.completed })?.id {
+                                proxy.scrollTo(lastUncompletedID)
+                            } else if let firstCompletedID = viewModel.toDos.first(where: { $0.completed })?.id {
+                                proxy.scrollTo(firstCompletedID)
+                            }
+
+                            focusedID = viewModel.newItemButtonTapped()
+                        }
+                    } label: {
+                        Label("New Item", systemImage: "plus.circle.fill")
+                            .bold()
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .imageScale(.large)
+                    }
+                    .buttonStyle(.borderless)
+                    .labelStyle(.titleAndIcon)
+                    .disabled(viewModel.isLoading)
+                }
             }
         }
         .task {
