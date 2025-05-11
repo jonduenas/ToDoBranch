@@ -45,4 +45,25 @@ struct ToDoListViewModelTests {
         // Check if the item was removed
         #expect(viewModel.toDos.count == initialCount - 1)
     }
+
+    @Test func onChangedUpdatesItem() async throws {
+        let testPersistence = PersistenceController(inMemory: true)
+        let testRepository = ToDoRepository(mode: .live(testPersistence), demoDataService: FetchableServiceStub<DemoToDo>())
+        let viewModel = ToDoListViewModel(repository: testRepository)
+
+        await viewModel.onAppearTask()
+        let _ = viewModel.newItemButtonTapped()
+
+        let todo = try #require(viewModel.toDos.first)
+        let newName = "Updated Item"
+        todo.name = newName
+        viewModel.onChanged(todo)
+
+        // Check if the item was updated
+        #expect(viewModel.toDos.first?.name == newName)
+
+        // Check if the change was persisted
+        let updatedTodo = try #require(testRepository.getToDo(with: todo.objectID))
+        #expect(updatedTodo.name == newName)
+    }
 }

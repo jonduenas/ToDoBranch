@@ -63,6 +63,15 @@ final class ToDoRepository {
         }
     }
 
+    func getToDo(with objectID: NSManagedObjectID) -> ToDo? {
+        do {
+            return try context.existingObject(with: objectID) as? ToDo
+        } catch {
+            print("Error fetching ToDo with objectID \(objectID): \(error)")
+            return nil
+        }
+    }
+
     @discardableResult
     func addToDo(name: String = "") throws -> ToDo {
         let newToDo = ToDo(context: context)
